@@ -7,10 +7,24 @@ datasource db {
   provider = "postgresql"
 }
 
+enum UserRole {
+  ADMIN
+  CREATOR
+  CONTESTANT
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
 model User {
     id        String   @id @default(uuid())
     email     String   @unique
     name      String?
+    password  String
+    role      UserRole   @default(CONTESTANT)
+    status   UserStatus     @default(ACTIVE)
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
