@@ -18,13 +18,90 @@ enum UserStatus {
   INACTIVE
 }
 
+enum ContestStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
 model User {
-    id        String   @id @default(uuid())
-    email     String   @unique
-    name      String?
-    password  String
-    role      UserRole   @default(CONTESTANT)
-    status   UserStatus     @default(ACTIVE)
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  password  String
+  photoURL  String?
+  bio       String?
+  address   String?
+  role      UserRole   @default(CONTESTANT)
+  status    UserStatus     @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  createdContests Contest[]  @relation("ContestCreator")
+  submissions     Submission[]
+  payments        Payment[]
+  wins            Contest[]  @relation("ContestWinner")
+}
+
+model Contest {
+  id              String        @id @default(uuid())
+  creatorId       String
+  name            String
+  image           String?
+  description     String?       @db.Text
+  price           Decimal       @db.Decimal(10, 2)
+  prizeMoney     Decimal       @db.Decimal(10, 2)
+  taskInstruction String        @db.Text
+  type            String        // e.g., "Article Writing", "Image Design"
+  deadline        DateTime
+  status          ContestStatus @default(PENDING)
+  winnerId        String?
+  participantCount Int          @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  creator         User          @relation("ContestCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  winner          User?         @relation("ContestWinner", fields: [winnerId], references: [id], onDelete: Cascade)
+  submissions     Submission[]
+  payments        Payment[]
+}
+
+model Submission {
+  id          String   @id @default(uuid())
+  contestId   String
+  userId      String
+  taskLink    String   @db.Text
+  submittedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  contest      Contest  @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([contestId, userId]) // One submission per user per contest
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  transactionId String        @unique
+  userId        String
+  contestId     String
+  amount        Decimal       @db.Decimal(10, 2)
+  status        PaymentStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contest       Contest       @relation(fields: [contestId], references: [id], onDelete: Cascade)
 }

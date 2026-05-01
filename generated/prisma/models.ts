@@ -9,4 +9,7 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/User'
+export type * from './models/Contest'
+export type * from './models/Submission'
+export type * from './models/Payment'
 export type * from './commonInputTypes'
